@@ -17,8 +17,8 @@ sig AppPago extends App {
 }
 
 abstract sig Versao {}
-sig Atual extends Versao {}
-sig Antiga extends Versao {}
+sig Atualizado extends Versao {}
+sig Deprecado extends Versao {}
 
 sig Cartao {}
 
@@ -26,7 +26,7 @@ sig Dispositivo {
 	appsInstalados: set App
 }
 
--- Usuário possui apenas uma conta e Conta possui apenas um usuário
+-- Usuário pode possuir uma (ou nenhuma) conta e Conta possui apenas um usuário
 fact usuarioEconta {
 	all c: Conta | one c.~conta
 }
@@ -53,8 +53,8 @@ fact cartao {
 -- Fatos da versao
 fact versao {
 	-- Só existem duas versões: atual e antiga
-	#(Atual) = 1
-	#(Antiga) = 1
+	#(Atualizado) = 1
+	#(Deprecado) = 1
 }
 
 
