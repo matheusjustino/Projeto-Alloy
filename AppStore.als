@@ -1,64 +1,102 @@
------ Assinaturas -----
-sig Usuario {
-	conta: lone Conta
-}
-
-sig Conta {
-	aplicativos: set App,
-	dispositivos: set Dispositivo
+sig Loja {
+	usuarios: some Usuario,
+	aplicativos: some App
 }
 
 abstract sig App {
-	versaoAtual: one Versao
+	versao: one Versao
 }
-sig AppGratis extends App {}
-sig AppPago extends App {
-	cartao: one Cartao
+sig AppPago, AppGratis extends App{}
+
+sig Usuario {
+	conta: one Conta
 }
 
 abstract sig Versao {}
-sig Atualizado extends Versao {}
-sig Deprecado extends Versao {}
+sig Atual, Antiga extends Versao {}
 
-sig Cartao {}
+sig Conta {
+	cartao: lone cartaoValido,
+	appsDaConta: set App,
+	dispositivosDaConta: some Dispositivo
+}
 
 sig Dispositivo {
 	appsInstalados: set App
 }
 
--- Usuário pode possuir uma (ou nenhuma) conta e Conta possui apenas um usuário
-fact usuarioEconta {
-	all c: Conta | one c.~conta
-}
--- Fatos das contas
-fact conta {
-	all c: Conta | #(c.dispositivos) > 0 /* Todas as contas possuem ao menos
-	uma conta */
-}
+sig cartaoValido {}
 
 
------ Fatos -----
--- Fatos dos dispositivos
-fact dispositivoEaplicativos {
-	/* Dispositivos só podem estar ligados a uma conta de um único usuário */
-	all d: Dispositivo | one d.~dispositivos
-	all a: App | one a.~aplicativos
-	all a: App, d: Dispositivo | (a in d.appsInstalados) => d.~dispositivos = a.~aplicativos
+---- FATOS -----
+fact loja {
+	#(Loja) = 1
+	-- a loja tem pelo menos um app e todos os apps estão na loja
+	all loja: Loja | some loja.aplicativos
+	all apps: App | apps in Loja.aplicativos
 }
--- Fatos do cartao
+
+fact usuario {
+	-- todo usuário está na loja
+	all u: Usuario | u in Loja.usuarios
+}
+
+fact dispositivo {
+	-- todo dispositivo está ligado a uma única conta
+	all d: Dispositivo | #(d.~dispositivosDaConta) = 1
+}
+
 fact cartao {
-	/* Um cartao só pode está ligado um aplicativo pago */
-	all ca: Cartao | one ca.~cartao
-}
--- Fatos da versao
-fact versao {
-	-- Só existem duas versões: atual e antiga
-	#(Atualizado) = 1
-	#(Deprecado) = 1
+	--Cartão está ligado a uma conta
+	all ca: cartaoValido | one ca.~cartao
 }
 
+fact conta {
+	all c: Conta | c in Usuario.conta and #(c.~conta) = 1
+	-- se o app está no dispositivo, então está na conta
+	all app: App, d: Dispositivo | (app in d.appsInstalados) => app in d.~dispositivosDaConta.appsDaConta
+	-- se o appPago está no dispositivo, então o appPago está na conta e a conta possui cartao válido
+	all app: AppPago, d: Dispositivo | (app in d.appsInstalados) => app in d.~dispositivosDaConta.appsDaConta and some d.~dispositivosDaConta.cartao
+	-- se o appPago está na conta, então a conta possui cartão válido
+	all app: AppPago, c: Conta | (app in c.appsDaConta) => some c.cartao
+	-- se o appPago não está na conta, então a conta não possui cartão válido
+	all c: Conta | (AppPago not in getApps[c]) => no c.cartao
+}
+
+fact appVersao {
+	#(Versao) = 2
+	all l: Loja | all app: l.aplicativos | (#(app.~appsDaConta) = 0 and #(app.~appsInstalados) = 0) => app.versao = Atual
+}
 
 
-pred show{}
 
-run show for 5
+
+
+
+
+
+
+
+
+
+
+fun getApps[c: Conta]: set App {
+	c.appsDaConta & App
+}
+
+
+assert a {
+	all c: Conta | all apps: c.appsDaConta | (apps = AppPago) => some c.cartao
+	all c: Conta, app: App | all d: c.dispositivosDaConta | (app in d.appsInstalados) => app in c.appsDaConta
+}
+assert b {
+	all c: Conta | (AppPago not in getApps[c]) => #(c.cartao) = 0
+}
+assert c {
+	all l: Loja | all app: l.aplicativos | (#(app.~appsDaConta) = 0 and #(app.~appsInstalados) = 0) => app.versao = Atual
+}
+
+--check c for 20
+
+pred show[]{}
+run show for 4
