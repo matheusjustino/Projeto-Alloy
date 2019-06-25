@@ -1,0 +1,46 @@
+MODULE main
+    VAR
+        cartao: {True, False};
+        app: {AP, DP, ANP, DNP};
+    ASSIGN
+        init(cartao) := False;
+
+        next(app) :=
+            case
+                (app = DNP) & (cartao = False): {ANP};
+                (app = ANP) & (cartao = False): {DNP};
+                (app = DP) & (cartao = True): {AP};
+                (app = AP) & (cartao = True): {DP};
+                TRUE: {DNP};
+            esac;
+        
+        next(cartao) :=
+            case
+                (app = AP | app = DP) & (cartao = False): {True};
+                TRUE: {False};
+            esac;
+    
+    LTLSPEC G(F(app = DNP & cartao = False -> (app = ANP)));
+    LTLSPEC G(F(app = ANP & cartao = False -> (app = DNP)));
+    LTLSPEC G((app = DNP | app = ANP) -> X (cartao = False));
+    LTLSPEC G((app = AP | app = DP) -> X (cartao = True));
+
+
+MODULE app(cartao)
+    VAR
+        pago: {True, False};
+        atualizado: {True, False};
+    ASSIGN
+        next(pago) :=
+            case
+                (pago = False) & (cartao = True): {True};
+                (pago = True) & (cartao = False): {False};
+                TRUE: False;
+            esac;
+        
+        next(atualizado) :=
+            case
+                (atualizado = True): {False};
+                (atualizado = False): {True};
+                TRUE: True;
+            esac;
