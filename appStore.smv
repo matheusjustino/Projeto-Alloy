@@ -8,12 +8,22 @@ MODULE main
         
         
     
+    -- Testando instalacao do app
     LTLSPEC G(cartao = False & aplic.pago = False) -> F dispositivo.appInstalado = True;
     LTLSPEC G(cartao = True) -> X dispositivo.appInstalado = True;
     LTLSPEC G(cartao = False & aplic.pago = True) -> X (dispositivo.appInstalado = False);
     SPEC AG(cartao = False & aplic.pago = True) -> AX (dispositivo.appInstalado = False);
     
+    -- Testando remoção de app instalando
+    LTLSPEC G(dispositivo.appInstalado = False) -> X (dispositivo.remover = FALSE);
+    LTLSPEC G(dispositivo.appInstalado = True) -> X (dispositivo.remover = TRUE);
+    SPEC AG(dispositivo.appInstalado = False) -> AX (dispositivo.remover = FALSE);
 
+    -- Testando atualizacao do app
+    LTLSPEC G(aplic.atualizado = True) -> X (dispositivo.atualizar = False);
+    LTLSPEC G(aplic.atualizado = False) -> X (dispositivo.atualizar = True);
+    SPEC AG(aplic.atualizado = True) -> AX (dispositivo.atualizar = False);
+    SPEC AG(aplic.atualizado = False) -> AX (dispositivo.atualizar = True);
 
 
 MODULE app(cartao)
@@ -47,11 +57,11 @@ MODULE disp(aplic, cartao)
     VAR
         appInstalado: {True, False};
         remover: boolean;
-        atualizar: boolean;
+        atualizar: {True, False};
     ASSIGN
         init(appInstalado) := {False};
         init(remover) := FALSE;
-        init(atualizar) := TRUE;
+        init(atualizar) := {False};
 
         next(appInstalado) :=
             case
@@ -69,10 +79,10 @@ MODULE disp(aplic, cartao)
             esac;
         next(atualizar) :=
             case
-                (aplic.atualizado = False): TRUE;
-                (aplic.atualizado = True): FALSE;
-                TRUE: TRUE;
+                (aplic.atualizado = False): {True};
+                (aplic.atualizado = True): {False};
+                TRUE: {False};
             esac;
-    
     FAIRNESS
         running
+
