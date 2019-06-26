@@ -12,17 +12,25 @@ MODULE main
     LTLSPEC G(cartao = False & aplic.pago = False) -> F dispositivo.appInstalado = True;
     LTLSPEC G(cartao = True) -> X dispositivo.appInstalado = True;
     LTLSPEC G(cartao = False & aplic.pago = True) -> X (dispositivo.appInstalado = False);
+    
+    -- Caso o cartão seja inválido (ou seja, não possui cartão), o aplicativo não pode ser instalado
     SPEC AG(cartao = False & aplic.pago = True) -> AX (dispositivo.appInstalado = False);
     
     -- Testando remoção de app instalando
     LTLSPEC G(dispositivo.appInstalado = False) -> X (dispositivo.remover = FALSE);
     LTLSPEC G(dispositivo.appInstalado = True) -> X (dispositivo.remover = TRUE);
+
+    -- Caso o aplicativo não esteja instalado no dispositivo, não é possível removê-lo
     SPEC AG(dispositivo.appInstalado = False) -> AX (dispositivo.remover = FALSE);
 
     -- Testando atualizacao do app
     LTLSPEC G(aplic.atualizado = True) -> X (dispositivo.atualizar = False);
     LTLSPEC G(aplic.atualizado = False) -> X (dispositivo.atualizar = True);
+
+    -- Caso o aplicativo instalado esteja atualizado, não é possível atualizá-lo
     SPEC AG(aplic.atualizado = True) -> AX (dispositivo.atualizar = False);
+
+    -- Caso o aplicativo instalado esteja desatualizado, será atualizado
     SPEC AG(aplic.atualizado = False) -> AX (dispositivo.atualizar = True);
 
 
@@ -65,22 +73,33 @@ MODULE disp(aplic, cartao)
 
         next(appInstalado) :=
             case
+                -- Propriedade que define que não pode instalar um aplicativo pago sem ter um cartão de crédito
                 (cartao = False & aplic.pago = True): {False};
+                -- Propriedade que define que caso o aplicativo não esteja instalado e possua cartão na conta, o aplicativo pode ser instalado
                 (appInstalado = False & (cartao = True)): {True};
-                (appInstalado = False & (cartao = False & aplic.pago = False)): {True};
+                -- Propriedade que define que caso o aplicativo esteja desinstalado e que seja grátis, o aplicativo instaldo será grátis
+                (appInstalado = False & (aplic.pago = False)): {True};
+                -- Propriedade que define que o aplicativo pago não pode ser instalado caso não exista cartão
                 (appInstalado = False & (cartao = False & aplic.pago = True)): {False};
+                -- Por padrão não há aplicativo instalado
                 TRUE: {False};
             esac;
         next(remover) :=
             case
+                -- Caso o aplicativo não exista no dispositivo, ele não pode ser removido
                 (appInstalado = False): FALSE;
+
+                -- Caso o aplicativo esteja instalado ele pode ser removido  
                 (appInstalado = True): TRUE;
                 TRUE: FALSE;
             esac;
         next(atualizar) :=
             case
+                -- Caso o aplicativo não esteja atualizado, ele pode ser atualizado
                 (aplic.atualizado = False): {True};
+                -- Caso o aplicativo já esteja atualizado, não é possível atualizar
                 (aplic.atualizado = True): {False};
+                -- Por padrão o aplicativo está sempre atualizado, então não é possível atualizado
                 TRUE: {False};
             esac;
     FAIRNESS
