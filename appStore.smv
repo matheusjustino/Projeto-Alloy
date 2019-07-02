@@ -99,7 +99,7 @@ MODULE disp(aplic, cartao)
                 (aplic.atualizado = False): {True};
                 -- Caso o aplicativo já esteja atualizado, não é possível atualizar
                 (aplic.atualizado = True): {False};
-                -- Por padrão o aplicativo está sempre atualizado, então não é possível atualizado
+                -- Por padrão o aplicativo está sempre atualizado, então não é possível atualizá-lo
                 TRUE: {False};
             esac;
     FAIRNESS
