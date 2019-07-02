@@ -1,4 +1,4 @@
-MODULE main
+﻿MODULE main
     VAR
         cartao: {True, False};
         aplic: process app(cartao);
@@ -31,7 +31,7 @@ MODULE main
     SPEC AG(aplic.atualizado = True) -> AX (dispositivo.atualizar = False);
 
     -- Caso o aplicativo instalado esteja desatualizado, será atualizado
-    SPEC AG(aplic.atualizado = False) -> AX (dispositivo.atualizar = True);
+    SPEC AG(aplic.atualizado = False -> dispositivo.atualizar = True);
 
 
 MODULE app(cartao)
