@@ -17,15 +17,15 @@
     SPEC AG(cartao = False & aplic.pago = True) -> AX (dispositivo.appInstalado = False);
     
     -- Testando remoção de app instalando
-    LTLSPEC G(dispositivo.appInstalado = False) -> X (dispositivo.remover = FALSE);
-    LTLSPEC G(dispositivo.appInstalado = True) -> X (dispositivo.remover = TRUE);
+    LTLSPEC G(dispositivo.appInstalado = False) -> X (dispositivo.remover = False);
+    LTLSPEC G(dispositivo.appInstalado = True) -> X (dispositivo.remover = True);
 
     -- Caso o aplicativo não esteja instalado no dispositivo, não é possível removê-lo
-    SPEC AG(dispositivo.appInstalado = False) -> AX (dispositivo.remover = FALSE);
+    SPEC AG(dispositivo.appInstalado = False) -> AX (dispositivo.remover = False);
 
     -- Testando atualizacao do app
-    LTLSPEC G(aplic.atualizado = True) -> X (dispositivo.atualizar = False);
-    LTLSPEC G(aplic.atualizado = False) -> X (dispositivo.atualizar = True);
+    LTLSPEC G(aplic.atualizado = True -> X dispositivo.atualizar = False);
+    LTLSPEC G(aplic.atualizado = False -> X dispositivo.atualizar = False);
 
     -- Caso o aplicativo instalado esteja atualizado, não é possível atualizá-lo
     SPEC AG(aplic.atualizado = True) -> AX (dispositivo.atualizar = False);
@@ -64,11 +64,11 @@ MODULE app(cartao)
 MODULE disp(aplic, cartao)
     VAR
         appInstalado: {True, False};
-        remover: boolean;
+        remover: {True, False};
         atualizar: {True, False};
     ASSIGN
         init(appInstalado) := {False};
-        init(remover) := FALSE;
+        init(remover) := {False};
         init(atualizar) := {False};
 
         next(appInstalado) :=
@@ -87,16 +87,16 @@ MODULE disp(aplic, cartao)
         next(remover) :=
             case
                 -- Caso o aplicativo não exista no dispositivo, ele não pode ser removido
-                (appInstalado = False): FALSE;
+                (appInstalado = False): {False};
 
                 -- Caso o aplicativo esteja instalado ele pode ser removido  
-                (appInstalado = True): TRUE;
-                TRUE: FALSE;
+                (appInstalado = True): {True, False};
+                TRUE: {False};
             esac;
         next(atualizar) :=
             case
                 -- Caso o aplicativo não esteja atualizado, ele pode ser atualizado
-                (aplic.atualizado = False): {True};
+                (aplic.atualizado = False): {True, False};
                 -- Caso o aplicativo já esteja atualizado, não é possível atualizar
                 (aplic.atualizado = True): {False};
                 -- Por padrão o aplicativo está sempre atualizado, então não é possível atualizá-lo
