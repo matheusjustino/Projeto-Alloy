@@ -31,7 +31,7 @@
     SPEC AG(aplic.atualizado = True) -> AX (dispositivo.atualizar = False);
 
     -- Caso o aplicativo instalado esteja desatualizado, será atualizado
-    SPEC AG(aplic.atualizado = False -> dispositivo.atualizar = True);
+    SPEC AG(aplic.atualizado = False -> AX dispositivo.atualizar = True);
 
 
 MODULE app(cartao)
@@ -53,8 +53,8 @@ MODULE app(cartao)
 
         next(atualizado) :=
             case
-                (atualizado = False): {True};
-                (atualizado = True): {False};
+                (atualizado = False): {True, False};
+                --(atualizado = True): {False};
                 TRUE: {True};
             esac;
     FAIRNESS
